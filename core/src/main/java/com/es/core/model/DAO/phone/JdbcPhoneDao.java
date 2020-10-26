@@ -1,7 +1,7 @@
 package com.es.core.model.DAO.phone;
 
 import com.es.core.model.DAO.CommonJdbcDaoUtils;
-import com.es.core.model.entity.phone.Color;
+import com.es.core.model.DAO.exceptions.IdUniquenessException;
 import com.es.core.model.entity.phone.Phone;
 import org.simpleflatmapper.jdbc.spring.JdbcTemplateMapperFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +16,9 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static com.es.core.model.DAO.phone.PhoneFieldsConstantsController.*;
 
@@ -35,7 +35,7 @@ public class JdbcPhoneDao implements PhoneDao {
     }
 
     private final ResultSetExtractor<List<Phone>> resultSetExtractor = JdbcTemplateMapperFactory
-            .newInstance().addKeys(phone_id)
+            .newInstance().addKeys(PHONE_ID)
             .newResultSetExtractor(Phone.class);
 
     private static final String SELECT_ONE_BY_ID_SQL_QUERY = "SELECT phones.id AS id, brand, model, price, " +
@@ -45,10 +45,10 @@ public class JdbcPhoneDao implements PhoneDao {
             "talkTimeHours, standByTimeHours, bluetooth, positioning, imageUrl, description, " +
             "colors.id AS colors_id, " +
             "colors.code AS colors_code " +
-            "FROM phones " +
+            "FROM (SELECT " +
+            "* FROM phones WHERE phones.id = ?) AS phones " +
             "LEFT JOIN phone2color ON phones.id = phone2color.phoneId " +
-            "LEFT JOIN colors ON colors.id = phone2color.colorId " +
-            "WHERE phones.id = ?";
+            "LEFT JOIN colors ON colors.id = phone2color.colorId ";
 
     private static final String SELECT_ALL_WITH_LIMIT_SQL_QUERY = "SELECT phonesWithColor.id AS id, brand, " +
             "model, price, displaySizeInches, weightGr, lengthMm, widthMm, heightMm, " +
@@ -74,7 +74,7 @@ public class JdbcPhoneDao implements PhoneDao {
             "frontCameraMegapixels=:frontCameraMegapixels, ramGb=:ramGb, internalStorageGb=:internalStorageGb, " +
             "batteryCapacityMah=:batteryCapacityMah, talkTimeHours=:talkTimeHours, standByTimeHours=:standByTimeHours, " +
             "bluetooth=:bluetooth, positioning=:positioning, imageUrl=:imageUrl, description=:description " +
-            "WHERE brand=:brand AND model=:model";
+            "WHERE phones.id=:id";
 
     private final static String DELETE_PHONE2COLOR_RECORDS_SQL_QUERY = "DELETE FROM phone2color WHERE phoneId = ?";
 
@@ -83,108 +83,35 @@ public class JdbcPhoneDao implements PhoneDao {
     private static final String COLORS_TABLE_NAME = "colors";
     private static final String PHONE2COLORS_TABLE_NAME = "phone2color";
 
-    private final ResultSetExtractor<List<Phone>> customPhoneMapper = (rs) -> {
-        List<Phone> phones = new ArrayList<>();
-        Phone currentPhone = null;
-        while (rs.next()) {
-            long id = rs.getLong(phone_id);
-            if (currentPhone == null) {
-                currentPhone = mapPhone(rs);
-            } else if (currentPhone.getId() != id) {
-                phones.add(currentPhone);
-                currentPhone = mapPhone(rs);
-            }
-            currentPhone.getColors().add(mapColor(rs));
-        }
-        if (currentPhone != null) {
-            phones.add(currentPhone);
-        }
-        return phones;
-    };
-
-    private final ResultSetExtractor<List<Phone>> customPhoneMapper2 = (rs) -> {
-        Map<Long, Phone> phones = new LinkedHashMap<>();
-        Phone currentPhone = null;
-        while (rs.next()) {
-            long id = rs.getLong(phone_id);
-            currentPhone = mapPhone(rs);
-            phones.putIfAbsent(id, currentPhone);
-            phones.get(id).getColors().add(mapColor(rs)); //immutable list :(
-        }
-        if (currentPhone != null) {
-            phones.putIfAbsent(currentPhone.getId(), currentPhone);
-            phones.get(currentPhone.getId()).getColors().add(mapColor(rs));
-        }
-        return new ArrayList<>(phones.values());
-    };
-
-    private Phone mapPhone(ResultSet rs) throws SQLException {
-        Phone phone = new Phone();
-        phone.setAnnounced(rs.getDate(announced));
-        phone.setBackCameraMegapixels(rs.getBigDecimal(backCameraMegapixels));
-        phone.setBatteryCapacityMah(rs.getInt(batteryCapacityMah));
-        phone.setBluetooth(rs.getString(bluetooth));
-        phone.setBrand(rs.getString(brand_unique));
-        phone.setDescription(rs.getString(description));
-        phone.setDeviceType(rs.getString(deviceType));
-        phone.setDisplayResolution(rs.getString(displayResolution));
-        phone.setDisplaySizeInches(rs.getBigDecimal(displaySizeInches));
-        phone.setDisplayTechnology(rs.getString(displayTechnology));
-        phone.setFrontCameraMegapixels(rs.getBigDecimal(frontCameraMegapixels));
-        phone.setHeightMm(rs.getBigDecimal(heightMm));
-        phone.setId(rs.getLong(phone_id));
-        phone.setImageUrl(rs.getString(imageUrl));
-        phone.setInternalStorageGb(rs.getBigDecimal(internalStorageGb));
-        phone.setLengthMm(rs.getBigDecimal(lengthMm));
-        phone.setModel(rs.getString(model_unique));
-        phone.setOs(rs.getString(os));
-        phone.setPixelDensity(rs.getInt(pixelDensity));
-        phone.setPrice(rs.getBigDecimal(price));
-        phone.setPositioning(rs.getString(positioning));
-        phone.setRamGb(rs.getBigDecimal(ramGb));
-        phone.setStandByTimeHours(rs.getBigDecimal(standByTimeHours));
-        phone.setTalkTimeHours(rs.getBigDecimal(talkTimeHours));
-        phone.setWeightGr(rs.getInt(weightGr));
-        phone.setWidthMm(rs.getBigDecimal(widthMm));
-        return phone;
-    }
-
-    private Color mapColor(ResultSet rs) throws SQLException {
-        var color = new Color();
-        color.setId(rs.getLong("colors_id"));
-        color.setCode(rs.getString("colors_code"));
-        return color;
-    }
-
     @Transactional(readOnly = true)
-    public Optional<Phone> get(final Long key) {
-        try {
-            return jdbcTemplate.query(SELECT_ONE_BY_ID_SQL_QUERY, resultSetExtractor, key).stream().findFirst();
-        } catch (DataAccessException e) {
+    public Optional<Phone> get(final Long key) throws DataAccessException {
+        List<Phone> queryResult = jdbcTemplate.query(SELECT_ONE_BY_ID_SQL_QUERY, resultSetExtractor, key);
+        if (queryResult.size() > 1) {
+            throw new IdUniquenessException(key, queryResult.size());
+        }
+        if (queryResult.size() == 0) {
             return Optional.empty();
         }
+        return Optional.of(queryResult.get(0));
     }
 
     @Transactional(rollbackFor = DataAccessException.class)
     public void save(final Phone phone) {
-        if (commonJdbcDaoUtils.isEntityExist(
-                PHONES_TABLE_NAME,
-                Map.of(brand_unique, phone.getBrand(), model_unique, phone.getModel()))) {
+        boolean isEntityExist = commonJdbcDaoUtils.isEntityExist(PHONES_TABLE_NAME,
+                Map.of(BRAND_UNIQUE, phone.getBrand(), MODEL_UNIQUE, phone.getModel()));
+        if (isEntityExist) {
             update(phone);
         } else {
             insert(phone);
         }
     }
 
-    @Transactional(readOnly = true)
-    public List<Phone> findAll(int offset, int limit) {
-        try {
-            return jdbcTemplate.query(SELECT_ALL_WITH_LIMIT_SQL_QUERY, resultSetExtractor, offset, limit);
-        } catch (DataAccessException e) {
-            return Collections.emptyList();
-        }
-    }
 
+    @Transactional(readOnly = true)
+    public List<Phone> findAll(int offset, int limit) throws DataAccessException {
+        return jdbcTemplate.query(SELECT_ALL_WITH_LIMIT_SQL_QUERY, resultSetExtractor, offset, limit);
+    }
+    
     private void update(final Phone phone) {
         NamedParameterJdbcTemplate parameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
         parameterJdbcTemplate.update(UPDATE_PHONE_SQL_QUERY, new BeanPropertySqlParameterSource(phone));
@@ -193,7 +120,7 @@ public class JdbcPhoneDao implements PhoneDao {
 
     private void insert(Phone phone) {
         Long newId = commonJdbcDaoUtils.insertAndReturnGeneratedKey(PHONES_TABLE_NAME, new BeanPropertySqlParameterSource(phone),
-                phone_id).longValue();
+                PHONE_ID).longValue();
         phone.setId(newId);
         saveColors(phone);
     }

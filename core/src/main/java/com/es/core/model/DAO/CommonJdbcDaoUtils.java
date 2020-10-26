@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-//could be refactored into AbstractDao of GenericDao
-
 @Component
 public class CommonJdbcDaoUtils {
 
@@ -22,7 +20,7 @@ public class CommonJdbcDaoUtils {
     }
 
     public boolean isEntityExist(final String tableName, final Map<String, String> uniqueFields) {
-        String query = "SELECT COUNT(1) FROM " + tableName + " WHERE ";
+        String query = "SELECT COUNT(*) FROM " + tableName + " WHERE ";
         query += uniqueFields
                 .entrySet()
                 .stream()

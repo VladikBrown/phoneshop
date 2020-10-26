@@ -1,28 +1,37 @@
 package com.es.core.model.entity.phone.jdbcPhoneDao;
 
+import com.es.core.model.DAO.exceptions.IdUniquenessException;
+import com.es.core.model.DAO.phone.JdbcPhoneDao;
 import com.es.core.model.DAO.phone.PhoneDao;
 import com.es.core.model.entity.phone.Color;
 import com.es.core.model.entity.phone.Phone;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.datasource.init.DatabasePopulator;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.jdbc.JdbcTestUtils;
+import org.springframework.test.util.AopTestUtils;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = JdbcPhoneDaoIntTestConfiguration.class)
 @ExtendWith(SpringExtension.class)
@@ -38,19 +47,13 @@ public class JdbcPhoneDaoIntTest {
 
 
     private static final String SELECT_BY_ID_SQL = "SELECT * FROM phones WHERE phones.id = ?";
-    private static final String SELECT_COLORS_BY_PHONE_ID_SQL = "SELECT \n" +
-            "    colors.id, colors.code\n" +
-            "FROM\n" +
-            "    phone2color\n" +
-            "        JOIN\n" +
-            "    colors ON phone2color.colorId = colors.id\n" +
-            "WHERE\n" +
-            "    phoneId = ?";
+    private static final String SELECT_COLORS_BY_PHONE_ID_SQL = "SELECT colors.id, colors.code FROM phone2color " +
+            "JOIN colors ON phone2color.colorId = colors.id " +
+            "WHERE phoneId = ?";
     private final static String SELECT_CORRESPONDING_COLORS_SQL = "SELECT colors.id, colors.code FROM " +
             "(SELECT * FROM phone2color WHERE phoneId = ?) AS corresponding_phone2color " +
             "JOIN colors " +
             "ON corresponding_phone2color.colorId = colors.id";
-
 
     private final List<Long> testIds = Arrays.asList(1000L, 1001L, 1002L, 1003L, 1004L);
     private Map<Long, Phone> testPhones;
@@ -90,6 +93,21 @@ public class JdbcPhoneDaoIntTest {
     }
 
     @Test
+    public void getByIdTestWithAmbiguity() {
+        assertThrows(IdUniquenessException.class, () -> {
+            JdbcTemplate jdbcTemplateMock = Mockito.mock(jdbcTemplate.getClass());
+            Field field = JdbcPhoneDao.class.getDeclaredField("jdbcTemplate");
+            field.setAccessible(true);
+            field.set(AopTestUtils.getUltimateTargetObject(jdbcPhoneDao), jdbcTemplateMock);
+
+            List<Phone> ambiguousResult = Arrays.asList(new Phone(), new Phone(), new Phone());
+            when(jdbcTemplateMock.query(anyString(), any(ResultSetExtractor.class), any(Object.class)))
+                    .thenReturn(ambiguousResult);
+            jdbcPhoneDao.get(Long.MAX_VALUE);
+        });
+    }
+
+    @Test
     public void getByNonExistingIdTest() {
         assertAll(
                 () -> {
@@ -108,7 +126,7 @@ public class JdbcPhoneDaoIntTest {
                 () -> assertPhonesEqualityWithLimitOffset(0, 5),
                 () -> assertPhonesEqualityWithLimitOffset(0, 0)
         );
-        assertEquals(jdbcPhoneDao.findAll(Integer.MAX_VALUE, 9), Collections.emptyList()); //can be pretty slow?:)
+        assertEquals(jdbcPhoneDao.findAll(Integer.MAX_VALUE, 9), Collections.emptyList());
     }
 
     private void assertPhonesEqualityWithLimitOffset(int limit, int offset) {
@@ -174,13 +192,13 @@ public class JdbcPhoneDaoIntTest {
         String updateTestString = "updated";
         expectedPhone.setDescription(updateTestString);
 
-        assertNotEquals(expectedPhone, actualPhone);
+        assertNotEquals(expectedPhone.getDescription(), actualPhone.getDescription());
 
         //checking the number of records while saving
         int quantityBeforeSaving = JdbcTestUtils.countRowsInTable(jdbcTemplate, "phones");
         jdbcPhoneDao.save(expectedPhone);
         int quantityAfterAdding = JdbcTestUtils.countRowsInTable(jdbcTemplate, "phones");
-        assertEquals(quantityBeforeSaving, quantityAfterAdding );
+        assertEquals(quantityBeforeSaving, quantityAfterAdding);
 
         //checking equality of records after reloading old record
         actualPhone = jdbcTemplate.queryForObject(query, new BeanPropertyRowMapper<>(Phone.class), 1000L);

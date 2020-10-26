@@ -28,7 +28,7 @@ public class JdbcPhoneDaoIntTestConfiguration {
 
     @Qualifier("test")
     @Bean
-    public DataSource getDataSource(){
+    public DataSource getDataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName(environment.getProperty("db.driver"));
         dataSource.setUrl(environment.getProperty("db.url"));
@@ -43,12 +43,12 @@ public class JdbcPhoneDaoIntTestConfiguration {
     }
 
     @Bean
-    public JdbcTemplate getJdbcTemplate(DataSource dataSource){
+    public JdbcTemplate getJdbcTemplate(DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 
     @Bean
-    public JdbcPhoneDao jdbcPhoneDao(@Qualifier("test") DataSource testDataSource){
+    public JdbcPhoneDao jdbcPhoneDao(@Qualifier("test") DataSource testDataSource) {
         var jdbcPhoneDao = new JdbcPhoneDao();
         jdbcPhoneDao.setDataSource(testDataSource);
         return jdbcPhoneDao;
