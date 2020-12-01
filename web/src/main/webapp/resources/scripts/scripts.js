@@ -29,6 +29,16 @@ function getMiniCart() {
     });
 }
 
+function login() {
+    $("#userName").text("Admin")
+    $("#login-logout").html("<a class=\"navbar-brand logo\" onclick='logout()'>Logout</a>");
+}
+
+function logout() {
+    $("#userName").text("");
+    $("#login-logout").html("<a class=\"navbar-brand logo\" onclick='login()'>Login</a>");
+}
+
 function loadMiniCart(miniCart) {
     $("#miniCart").text("My cart: " + miniCart.totalQuantity + " items " + miniCart.totalCost + " $");
 }

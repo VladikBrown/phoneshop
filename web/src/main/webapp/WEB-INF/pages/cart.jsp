@@ -39,8 +39,8 @@
         </tr>
         </thead>
         <tbody>
-        <c:forEach var="orderItem" items="${cart.items}" varStatus="statusOrderItems">
-            <tr class="row-${statusOrderItems.index % 2 == 0 ? "even" : ""}">
+        <c:forEach var="orderItem" items="${cart.items}" varStatus="statusOrders">
+            <tr class="row-${statusOrders.index % 2 == 0 ? "even" : ""}">
                 <th scope="row">
                     <img class="product-tile"
                          src="https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/${orderItem.product.imageUrl}">
@@ -69,7 +69,7 @@
                            class="quantityInput quantity"
                            type="text"
                            name="quantity"
-                           value="${not empty error ? paramValues['quantity'][statusOrderItems.index] : orderItem.quantity}"/>
+                           value="${not empty error ? paramValues['quantity'][statusOrders.index] : orderItem.quantity}"/>
                     <input type="hidden"
                            form="updateForm"
                            name="phoneId"

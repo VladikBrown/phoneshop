@@ -9,4 +9,8 @@ public class IdUniquenessException extends RuntimeException {
     public IdUniquenessException(String key, int size) {
         super("Id: " + key + " isn't unique." + size + " matches found");
     }
+
+    public IdUniquenessException() {
+
+    }
 }

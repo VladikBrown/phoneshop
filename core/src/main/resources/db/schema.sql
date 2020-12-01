@@ -62,6 +62,8 @@ create table orders (
   firstName VARCHAR(100) NOT NULL,
   lastName VARCHAR(100) NOT NULL,
   deliveryAddress VARCHAR(100) NOT NULL,
+  orderDate DATE,
+  orderStatus varchar(10) NOT NULL,
   contactPhoneNo VARCHAR(100) NOT NULL,
   additionalInformation VARCHAR(1024),
   subtotal DECIMAL(12,2),

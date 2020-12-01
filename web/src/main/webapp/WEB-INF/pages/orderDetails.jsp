@@ -3,7 +3,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jstl/fmt" %>
 
-
 <head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
@@ -13,13 +12,13 @@
     <body>
     <nav class="navbar navbar-light bg-light">
         <div class="navbar-brand">
-            <h1>
-                Thank you for your order
-            </h1>
+            <h4>
+                Order number: ${order.id}
+            </h4>
         </div>
         <div class="navbar-brand">
             <h4>
-                Order number: ${order.id}
+                Order status: ${order.orderStatus}
             </h4>
         </div>
     </nav>
@@ -36,14 +35,9 @@
         </thead>
         <tbody>
         <c:forEach var="orderItem" items="${order.orderItems}" varStatus="statusOrders">
-            <c:set var="error" value="${quantityErrors[orderItem.phone.id]}"/>
             <tr class="row-${statusOrders.index % 2 == 0 ? "even" : ""}">
                 <td>${orderItem.phone.brand}</td>
-                <td>
-                    <a href="${pageContext.servletContext.contextPath}/productDetails/${orderItem.phone.id}">
-                            ${orderItem.phone.model}
-                    </a>
-                </td>
+                <td>${orderItem.phone.model}</td>
                 <td>
                     <c:forEach var="color" items="${orderItem.phone.colors}" varStatus="statusColors">
                         <c:out value="${color.code}"/>
@@ -97,12 +91,30 @@
     </div>
 
     <div class="d-flex">
-        <div class="mr-auto p-2">
-            <a href="${pageContext.request.contextPath}/productList"
-               class="btn btn-outline-dark justify-content-lg-start">
-                Back to Product List
-            </a>
-        </div>
+        <nav class="navbar navbar-light bg-white">
+            <ul class="navbar-nav mr-auto">
+                <li>
+                    <button form="backForm"
+                            style="padding-left: 30px; padding-right: 30px"
+                            class="btn btn-outline-dark justify-content-lg-start">
+                        Back
+                    </button>
+                    <form method="get" action="${pageContext.request.contextPath}/admin/orders" id="backForm"></form>
+                </li>
+                <li class="nav-item active">
+                    <tags:changeStatusButton label="${order.orderStatus.toString() == 'REJECTED' ? 'New' : 'Rejected'}"
+                                             orderStatus="${order.orderStatus.toString() == 'REJECTED' ? 'NEW' : 'REJECTED'}"
+                                             order="${order}"/>
+                    <tags:changeStatusButton
+                            label="${order.orderStatus.toString() == 'DELIVERED' ? 'New' : 'Delivered'}"
+                            orderStatus="${order.orderStatus.toString() == 'DELIVERED' ? 'NEW' : 'DELIVERED'}"
+                            order="${order}"/>
+                </li>
+                <li class="nav-item active">
+
+                </li>
+            </ul>
+        </nav>
     </div>
 
     </body>

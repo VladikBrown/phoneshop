@@ -57,22 +57,25 @@
 <header>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-fixed-top">
         <a class="navbar-brand logo" href="${pageContext.servletContext.contextPath}">
-              Phonify
-          </a>
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-              <ul class="navbar-nav mr-auto"></ul>
-              <a class="navbar-brand logo" href="#">Login</a>
-              <form class="form-inline my-2 my-lg-0" action="${pageContext.request.contextPath}/cart">
-                  <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="miniCart">
-                  </button>
-              </form>
-              <div id="miniCarts">
-              </div>
-          </div>
-      </nav>
-  </header>
+            Phonify
+        </a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto"></ul>
+            <a class="navbar-brand logo" id="userName" href="${pageContext.request.contextPath}/admin/orders"></a>
+            <div id="login-logout">
+                <a class="navbar-brand logo" onclick="login()">Login</a>
+            </div>
+            <form class="form-inline my-2 my-lg-0" action="${pageContext.request.contextPath}/cart">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="miniCart">
+                </button>
+            </form>
+            <div id="miniCarts">
+            </div>
+        </div>
+    </nav>
+</header>
 
-  <main>
+<main>
     <jsp:doBody/>
   </main>
   <p>
