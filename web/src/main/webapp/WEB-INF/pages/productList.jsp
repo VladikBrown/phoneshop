@@ -50,8 +50,8 @@
         </tr>
         </thead>
         <tbody>
-        <c:forEach var="phone" items="${phones}" varStatus="statusCartItems">
-            <tr class="row-${statusCartItems.index % 2 == 0 ? "even" : ""}">
+        <c:forEach var="phone" items="${phones}" varStatus="statusOrderItems">
+            <tr class="row-${statusOrderItems.index % 2 == 0 ? "even" : ""}">
                 <th scope="row">
                     <img class="product-tile"
                          src="https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/${phone.imageUrl}">

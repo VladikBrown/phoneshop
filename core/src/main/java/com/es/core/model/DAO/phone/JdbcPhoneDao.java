@@ -17,7 +17,6 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -29,14 +28,12 @@ import static com.es.core.model.DAO.phone.consts.PhoneFieldsConstantsController.
 @Repository
 public class JdbcPhoneDao implements PhoneDao {
 
+    @Autowired
     private JdbcTemplate jdbcTemplate;
-    private CommonJdbcDaoUtils commonJdbcDaoUtils;
 
     @Autowired
-    public void setDataSource(DataSource dataSource) {
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
-        this.commonJdbcDaoUtils = new CommonJdbcDaoUtils(jdbcTemplate);
-    }
+    private CommonJdbcDaoUtils commonJdbcDaoUtils;
+
 
     private final ResultSetExtractor<List<Phone>> resultSetExtractor = JdbcTemplateMapperFactory
             .newInstance().addKeys(PHONE_ID)
@@ -169,7 +166,7 @@ public class JdbcPhoneDao implements PhoneDao {
     private void update(final Phone phone) {
         NamedParameterJdbcTemplate parameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
         parameterJdbcTemplate.update(UPDATE_PHONE_SQL_QUERY, new BeanPropertySqlParameterSource(phone));
-        refreshBindedColors(phone);
+        refreshRelatedColors(phone);
     }
 
     private void insert(Phone phone) {
@@ -179,7 +176,7 @@ public class JdbcPhoneDao implements PhoneDao {
         saveColors(phone);
     }
 
-    private void refreshBindedColors(final Phone phone) {
+    private void refreshRelatedColors(final Phone phone) {
         jdbcTemplate.update(DELETE_PHONE2COLOR_RECORDS_SQL_QUERY, phone.getId());
         saveColors(phone);
     }

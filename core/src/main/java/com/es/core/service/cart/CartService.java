@@ -14,4 +14,6 @@ public interface CartService {
     Map<Long, String> update(Cart cart, Map<Long, Long> items, Map<Long, String> errors);
 
     void remove(Cart cart, Long phoneId);
+
+    Map<Long, String> trimRedundantProducts(Cart cart);
 }

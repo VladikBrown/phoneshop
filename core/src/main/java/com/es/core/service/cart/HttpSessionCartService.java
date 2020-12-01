@@ -23,6 +23,8 @@ public class HttpSessionCartService implements CartService {
     private static final String OUT_OF_STOCK_ERROR_MESSAGE = "Out of stock";
     private static final String NOT_PRESENT_STOCK_ERROR_MESSAGE = "This product isn't available now";
     private static final String UPDATE_SUCCESS_MESSAGE = "Successfully updated";
+    private static final String QUANTITY_CHANGED_OUT_OF_STOCK_MESSAGE = "Quantity has been decreased";
+
     @Autowired
     private PhoneDao phoneDao;
     @Autowired
@@ -136,5 +138,29 @@ public class HttpSessionCartService implements CartService {
 
     private void increaseQuantity(CartItem cartItem, Long quantity) {
         cartItem.setQuantity(cartItem.getQuantity() + quantity);
+    }
+
+    private void decreaseQuantity(CartItem cartItem, Long quantity) {
+        if (cartItem.getQuantity() - quantity >= 0) {
+            cartItem.setQuantity(cartItem.getQuantity() - quantity);
+        } else cartItem.setQuantity(0L);
+    }
+
+    public Map<Long, String> trimRedundantProducts(Cart cart) {
+        Map<Long, String> changesInfo = new HashMap<>();
+        for (var cartItem : cart.getItems()) {
+            var optionalStock = stockDao.get(cartItem.getProduct().getId());
+            if (!optionalStock.isPresent()) {
+                cartItem.setQuantity(0L);
+                changesInfo.put(cartItem.getProduct().getId(), QUANTITY_CHANGED_OUT_OF_STOCK_MESSAGE);
+                continue;
+            }
+            if (optionalStock.get().getStock() < cartItem.getQuantity()) {
+                cartItem.setQuantity(Long.valueOf(optionalStock.get().getStock()));
+                changesInfo.put(cartItem.getProduct().getId(), QUANTITY_CHANGED_OUT_OF_STOCK_MESSAGE);
+            }
+        }
+        recalculateCart(cart);
+        return changesInfo;
     }
 }

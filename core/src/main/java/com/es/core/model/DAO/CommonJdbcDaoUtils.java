@@ -12,12 +12,9 @@ import java.util.stream.Collectors;
 @Component
 public class CommonJdbcDaoUtils {
 
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    public CommonJdbcDaoUtils(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     public boolean isEntityExist(final String tableName, final Map<String, String> uniqueFields) {
         String query = "SELECT COUNT(*) FROM " + tableName + " WHERE ";
