@@ -1,12 +1,15 @@
 package com.es.phoneshop.web.controller.pages.admin;
 
 import com.es.core.model.DAO.order.OrderDao;
+import com.es.core.model.entity.order.Order;
 import com.es.core.model.entity.order.OrderStatus;
 import com.es.core.service.order.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @Controller
 @RequestMapping(value = "/admin/orders")
@@ -26,14 +29,22 @@ public class OrdersPageController {
 
     @GetMapping(value = "/{orderId}")
     public String getOrder(Model model, @PathVariable Long orderId) {
-        model.addAttribute("order", orderDao.getByOrderNumber(orderId).get());
+        Optional<Order> optionalOrder = orderDao.getByOrderNumber(orderId);
+        if (optionalOrder.isPresent()) {
+            Order order = optionalOrder.get();
+            model.addAttribute("order", order);
+        }
         return "orderDetails";
     }
 
     @PutMapping(value = "/{orderId}")
     public String changeOrderStatus(@PathVariable Long orderId, @RequestParam(name = "orderStatus") String orderStatus, Model model) {
-        orderService.changeOrderStatus(OrderStatus.valueOf(orderStatus), orderDao.getByOrderNumber(orderId).get());
-        model.addAttribute("order", orderDao.getByOrderNumber(orderId).get());
+        Optional<Order> optionalOrder = orderDao.getByOrderNumber(orderId);
+        if (optionalOrder.isPresent()) {
+            Order order = optionalOrder.get();
+            orderService.changeOrderStatus(OrderStatus.valueOf(orderStatus), order);
+            model.addAttribute("order", order);
+        }
         return "orderDetails";
     }
 }

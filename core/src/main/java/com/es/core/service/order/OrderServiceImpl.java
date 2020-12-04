@@ -66,31 +66,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void changeOrderStatus(OrderStatus orderStatus, Order order) {
-        switch (orderStatus) {
-            case NEW:
-                setOrderStatusNew(order);
-                break;
-            case REJECTED:
-                setOrderStatusRejected(order);
-                break;
-            case DELIVERED:
-                setOrderStatusDelivered(order);
-                break;
-        }
-    }
-
-    private void setOrderStatusRejected(Order order) {
-        order.setOrderStatus(OrderStatus.REJECTED);
-        orderDao.save(order);
-    }
-
-    private void setOrderStatusDelivered(Order order) {
-        order.setOrderStatus(OrderStatus.DELIVERED);
-        orderDao.save(order);
-    }
-
-    private void setOrderStatusNew(Order order) {
-        order.setOrderStatus(OrderStatus.NEW);
+        order.setOrderStatus(orderStatus);
         orderDao.save(order);
     }
 
