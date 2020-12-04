@@ -1,6 +1,7 @@
 package com.es.core.model.entity.order;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 public class Order {
@@ -21,7 +22,9 @@ public class Order {
     private String contactPhoneNo;
     private String additionalInformation;
 
-    private OrderStatus status;
+    private LocalDate orderDate;
+
+    private OrderStatus orderStatus;
 
     public String getSecureId() {
         return secureId;
@@ -103,12 +106,20 @@ public class Order {
         this.contactPhoneNo = contactPhoneNo;
     }
 
-    public OrderStatus getStatus() {
-        return status;
+    public LocalDate getOrderDate() {
+        return orderDate;
     }
 
-    public void setStatus(OrderStatus status) {
-        this.status = status;
+    public void setOrderDate(LocalDate orderDate) {
+        this.orderDate = orderDate;
+    }
+
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(OrderStatus status) {
+        this.orderStatus = status;
     }
 
     public String getAdditionalInformation() {

@@ -39,9 +39,9 @@
         </tr>
         </thead>
         <tbody>
-        <c:forEach var="orderItem" items="${order.orderItems}" varStatus="statusOrderItems">
+        <c:forEach var="orderItem" items="${order.orderItems}" varStatus="statusOrders">
             <c:set var="error" value="${quantityErrors[orderItem.phone.id]}"/>
-            <tr class="row-${statusOrderItems.index % 2 == 0 ? "even" : ""}">
+            <tr class="row-${statusOrders.index % 2 == 0 ? "even" : ""}">
                 <td>${orderItem.phone.brand}</td>
                 <td>
                     <a href="${pageContext.servletContext.contextPath}/productDetails/${orderItem.phone.id}">

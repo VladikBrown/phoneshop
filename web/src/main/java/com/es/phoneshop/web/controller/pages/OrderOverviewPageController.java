@@ -18,8 +18,7 @@ public class OrderOverviewPageController {
 
     @GetMapping("/{orderId}")
     public String getOrderOverview(@PathVariable String orderId, Model model) {
-        Order order = orderDao.get(orderId).get();
-        System.out.println(order.getAdditionalInformation());
+        Order order = orderDao.getBySecureId(orderId).get();
         model.addAttribute("order", order);
         return "orderOverview";
     }
