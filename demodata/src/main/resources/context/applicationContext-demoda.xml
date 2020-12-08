@@ -9,5 +9,6 @@
 
     <jdbc:initialize-database enabled="true" data-source="dataSource">
         <jdbc:script location="classpath:db/demodata-phones.sql" />
+        <jdbc:script location="classpath:db/security-demodataset.sql"/>
     </jdbc:initialize-database>
 </beans>

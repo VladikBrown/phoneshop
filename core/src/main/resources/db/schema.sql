@@ -4,6 +4,9 @@ drop table if exists stocks;
 drop table if exists phones;
 drop table if exists orders;
 drop table if exists orderItems;
+drop table if exists users;
+drop table if exists authorities;
+
 
 create table colors (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -77,4 +80,16 @@ create table orderItems (
   orderId BIGINT NOT NULL,
   phoneId BIGINT NOT NULL,
   quantity SMALLINT NOT NULL
+);
+
+create table users(
+    username varchar_ignorecase(50) not null primary key,
+    password varchar_ignorecase(500) not null,
+    enabled boolean not null
+);
+
+create table authorities (
+    username varchar_ignorecase(50) not null,
+    authority varchar_ignorecase(50) not null,
+    constraint fk_authorities_users foreign key(username) references users(username)
 );
