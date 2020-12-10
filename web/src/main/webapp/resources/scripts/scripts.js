@@ -29,14 +29,8 @@ function getMiniCart() {
     });
 }
 
-function login() {
-    $("#userName").text("Admin")
-    $("#login-logout").html("<a class=\"navbar-brand logo\" onclick='logout()'>Logout</a>");
-}
-
-function logout() {
-    $("#userName").text("");
-    $("#login-logout").html("<a class=\"navbar-brand logo\" onclick='login()'>Login</a>");
+function submitForm(formId) {
+    document.getElementById(formId).submit();
 }
 
 function loadMiniCart(miniCart) {
