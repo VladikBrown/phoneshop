@@ -2,10 +2,10 @@ package com.es.phoneshop.web.controller;
 
 import com.es.core.model.entity.cart.Cart;
 import com.es.core.service.cart.CartService;
+import com.es.core.service.order.OutOfStockException;
 import com.es.phoneshop.web.controller.dto.AddPhoneResponseDTO;
 import com.es.phoneshop.web.controller.dto.MiniCartDTO;
 import com.es.phoneshop.web.controller.validation.QuantityInputWrapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Validator;
@@ -24,7 +24,7 @@ public class AjaxCartController {
     @Resource
     private Validator quantityValidator;
 
-    @Autowired
+    @Resource
     private CartService cartService;
 
     @InitBinder("quantityInputWrapper")
@@ -54,7 +54,11 @@ public class AjaxCartController {
             return createAddPhoneResponseDTO(false, cart, bindingResult);
         }
 
-        cartService.addPhone(cart, phoneId, Long.valueOf(quantityInputWrapper.getQuantity()));
+        try {
+            cartService.addPhone(cart, phoneId, Long.valueOf(quantityInputWrapper.getQuantity()));
+        } catch (OutOfStockException e) {
+            bindingResult.reject("quantity", "Out of stock");
+        }
         return createAddPhoneResponseDTO(true, cart, bindingResult);
     }
 

@@ -6,6 +6,7 @@ import com.es.core.model.entity.cart.Cart;
 import com.es.core.model.entity.cart.CartItem;
 import com.es.core.model.entity.phone.Phone;
 import com.es.core.model.entity.phone.Stock;
+import com.es.core.service.order.OutOfStockException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +44,7 @@ public class HttpSessionCartService implements CartService {
     }
 
     @Override
-    public void addPhone(Cart cart, Long phoneId, Long quantity) {
+    public void addPhone(Cart cart, Long phoneId, Long quantity) throws OutOfStockException {
         try {
             Phone phone = phoneDao.get(phoneId).get();
             Optional<CartItem> optionalCartItem = findItemInCart(cart, phoneId);
@@ -51,11 +52,19 @@ public class HttpSessionCartService implements CartService {
                 var cartItem = optionalCartItem.get();
                 increaseQuantity(cartItem, quantity);
             } else {
-                cart.getItems().add(new CartItem(phone, quantity));
+                addPhoneToCart(cart, phone, quantity);
             }
             recalculateCart(cart);
         } catch (NoSuchElementException e) {
             throw new NoSuchElementException(String.valueOf(phoneId));
+        }
+    }
+
+    private void addPhoneToCart(Cart cart, Phone phone, Long quantity) throws OutOfStockException {
+        if (isInStock(phone.getId(), quantity)) {
+            cart.getItems().add(new CartItem(phone, quantity));
+        } else {
+            throw new OutOfStockException();
         }
     }
 
@@ -101,6 +110,13 @@ public class HttpSessionCartService implements CartService {
         recalculateCart(cart);
     }
 
+    public boolean isInStock(Long id, Long quantity) {
+        return stockDao
+                .get(id)
+                .filter(stock -> stock.getStock() >= quantity)
+                .isPresent();
+    }
+
     private void recalculateCart(Cart cart) {
         recalculateTotalCost(cart);
         recalculateTotalQuantity(cart);
@@ -136,8 +152,13 @@ public class HttpSessionCartService implements CartService {
         } else return BigDecimal.ZERO;
     }
 
-    private void increaseQuantity(CartItem cartItem, Long quantity) {
-        cartItem.setQuantity(cartItem.getQuantity() + quantity);
+    private void increaseQuantity(CartItem cartItem, Long quantity) throws OutOfStockException {
+        var increasedQuantity = cartItem.getQuantity() + quantity;
+        if (isInStock(cartItem.getProduct().getId(), increasedQuantity)) {
+            cartItem.setQuantity(increasedQuantity);
+        } else {
+            throw new OutOfStockException();
+        }
     }
 
     private void decreaseQuantity(CartItem cartItem, Long quantity) {
