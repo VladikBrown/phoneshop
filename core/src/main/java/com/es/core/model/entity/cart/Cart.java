@@ -9,6 +9,7 @@ import java.util.Locale;
 
 public class Cart implements Serializable, Cloneable {
     private Long totalQuantity;
+
     private final Currency currency = Currency.getInstance(Locale.US);
 
     private BigDecimal totalCost;

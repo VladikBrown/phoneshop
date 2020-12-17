@@ -51,6 +51,18 @@ public class JdbcPhoneDao implements PhoneDao {
             "LEFT JOIN phone2color ON phones.id = phone2color.phoneId " +
             "LEFT JOIN colors ON colors.id = phone2color.colorId ";
 
+    private static final String SELECT_ONE_BY_MODEL_SQL_QUERY = "SELECT phones.id AS id, brand, model, price, " +
+            "displaySizeInches, weightGr, lengthMm, widthMm, heightMm, announced, deviceType, " +
+            "os, displayResolution, pixelDensity, displayTechnology,backCameraMegapixels, " +
+            "frontCameraMegapixels, ramGb, internalStorageGb, batteryCapacityMah, " +
+            "talkTimeHours, standByTimeHours, bluetooth, positioning, imageUrl, description, " +
+            "colors.id AS colors_id, " +
+            "colors.code AS colors_code " +
+            "FROM (SELECT " +
+            "* FROM phones WHERE phones.model = ?) AS phones " +
+            "LEFT JOIN phone2color ON phones.id = phone2color.phoneId " +
+            "LEFT JOIN colors ON colors.id = phone2color.colorId ";
+
     private static final String SELECT_ALL_WITH_LIMIT_SQL_QUERY = "SELECT phonesWithColor.id AS id, brand, " +
             "model, price, displaySizeInches, weightGr, lengthMm, widthMm, heightMm, " +
             "announced, deviceType, os, displayResolution, pixelDensity, displayTechnology, " +
@@ -118,6 +130,18 @@ public class JdbcPhoneDao implements PhoneDao {
         List<Phone> queryResult = jdbcTemplate.query(SELECT_ONE_BY_ID_SQL_QUERY, resultSetExtractor, key);
         if (queryResult.size() > 1) {
             throw new IdUniquenessException(key, queryResult.size());
+        }
+        if (queryResult.size() == 0) {
+            return Optional.empty();
+        }
+        return Optional.of(queryResult.get(0));
+    }
+
+    @Override
+    public Optional<Phone> get(String model) {
+        List<Phone> queryResult = jdbcTemplate.query(SELECT_ONE_BY_MODEL_SQL_QUERY, resultSetExtractor, model);
+        if (queryResult.size() > 1) {
+            throw new IdUniquenessException(model, queryResult.size());
         }
         if (queryResult.size() == 0) {
             return Optional.empty();
